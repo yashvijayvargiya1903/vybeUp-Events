@@ -256,20 +256,57 @@ main{overflow:hidden}
 <script>
 const toast=document.getElementById('toast'),state={name:'',mobile:'',age:'',identityMethod:'aadhaar',photos:[false,false,false],photoData:['','',''],faceLocked:false,verified:false,gender:'both',interest:'all',deck:[],deckIndex:0,likedByMe:new Set(),matches:[],currentScreen:'welcome',currentChatName:'',interests:['garba','cricket','music'],primaryInterest:'garba',plans:[],safetyCheckIn:false,eventNiche:'garba'};
 const STORAGE_KEY='vybeup_demo_v4';
+function saveCheckpoint(){
+  try{
+    const checkpoint={
+      name:state.name||'',
+      mobile:state.mobile||'',
+      age:state.age||'',
+      identityMethod:state.identityMethod||'aadhaar',
+      faceLocked:!!state.faceLocked,
+      verified:!!state.verified,
+      photos:Array.isArray(state.photos)?state.photos.map(Boolean):[false,false,false],
+      photoConsent:!!document.getElementById('photoConsent')?.checked,
+      aadhaar:document.getElementById('aadhaar')?.value||'',
+      aadhaarConsent:!!document.getElementById('aadhaarConsent')?.checked,
+      phoneOtp:otpValueSafe('phoneOtpInputs'),
+      idOtp:otpValueSafe('idOtpInputs'),
+      interests:state.interests||[],
+      primaryInterest:state.primaryInterest||'garba',
+      currentScreen:state.currentScreen||'welcome',
+      eventNiche:state.eventNiche||state.primaryInterest||'garba'
+    };
+    localStorage.setItem('vybeup_checkpoint_v1',JSON.stringify(checkpoint));
+  }catch(e){}
+}
 function saveState(){
+  // Always save the tiny navigation/form checkpoint first. This survives even if
+  // a large photo payload would exceed localStorage quota.
+  saveCheckpoint();
   try{
     const clean={...state,deck:[],deckIndex:state.deckIndex,likedByMe:[...state.likedByMe],matches:state.matches.map(p=>p.name),currentScreen:state.currentScreen};
     clean.aadhaar=document.getElementById('aadhaar')?.value||'';
     clean.aadhaarConsent=!!document.getElementById('aadhaarConsent')?.checked;
     clean.phoneOtp=otpValueSafe('phoneOtpInputs'); clean.idOtp=otpValueSafe('idOtpInputs'); clean.photoConsent=!!document.getElementById('photoConsent')?.checked; clean.currentChatName=currentChat?.name||state.currentChatName||''; clean.interests=state.interests||[]; clean.primaryInterest=state.primaryInterest||'garba'; clean.plans=state.plans||[]; clean.safetyCheckIn=!!state.safetyCheckIn; clean.eventNiche=state.eventNiche||state.primaryInterest||'garba'; clean.chatMessages=chatMessages;
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(clean));
-  }catch(e){}
+    // Profile images are compressed before reaching here. Keep the complete demo
+    // state in localStorage, but never let an oversized payload block navigation.
+    const serialized=JSON.stringify(clean);
+    if(serialized.length<4500000)localStorage.setItem(STORAGE_KEY,serialized);
+    else{
+      const compact={...clean,photoData:['','','']};
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(compact));
+    }
+  }catch(e){saveCheckpoint()}
 }
 function otpValueSafe(id){const el=document.getElementById(id);return el?[...el.querySelectorAll('input')].map(x=>x.value).join(''):''}
 function restoreState(){
   try{
-    const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); if(!x)return;
-    if(x.chatMessages&&typeof x.chatMessages==='object')Object.assign(chatMessages,x.chatMessages); Object.assign(state,x); if(!Array.isArray(state.interests)||!state.interests.length)state.interests=['garba','cricket','music']; if(!Array.isArray(state.plans))state.plans=[]; if(!state.primaryInterest)state.primaryInterest=state.interests[0]||'garba'; state.eventNiche=state.eventNiche||state.primaryInterest||'garba';
+    const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+    const checkpoint=JSON.parse(localStorage.getItem('vybeup_checkpoint_v1')||'null');
+    if(!stored&&!checkpoint)return;
+    const x={...(stored||{}),...(checkpoint||{})};
+    if(stored?.chatMessages&&typeof stored.chatMessages==='object')Object.assign(chatMessages,stored.chatMessages);
+    Object.assign(state,x); if(!Array.isArray(state.interests)||!state.interests.length)state.interests=['garba','cricket','music']; if(!Array.isArray(state.plans))state.plans=[]; if(!state.primaryInterest)state.primaryInterest=state.interests[0]||'garba'; state.eventNiche=state.eventNiche||state.primaryInterest||'garba';
     state.likedByMe=new Set(x.likedByMe||[]);
     state.matches=(x.matches||[]).map(n=>people.find(p=>p.name===n)).filter(Boolean);
     if(document.getElementById('fullName'))document.getElementById('fullName').value=state.name||'';
@@ -278,17 +315,23 @@ function restoreState(){
     if(document.getElementById('mobile'))document.getElementById('mobile').value=state.mobile||'';
     if(document.getElementById('aadhaar'))document.getElementById('aadhaar').value=x.aadhaar||'';
     if(document.getElementById('aadhaarConsent'))document.getElementById('aadhaarConsent').checked=!!x.aadhaarConsent; if(document.getElementById('photoConsent'))document.getElementById('photoConsent').checked=!!x.photoConsent;
-    if(state.photoData)state.photoData.forEach((src,i)=>{if(src){const lab=document.getElementById('u'+(i+1));const img=lab?.querySelector('img');if(img){img.src=src;lab.classList.add('filled')}}}); if(state.faceLocked||state.photos.every(Boolean))updateSubmit(); if(state.currentScreen==='profilePhotos')setTimeout(updateSubmit,0);
+    if(state.photoData)state.photoData.forEach((src,i)=>{if(src){state.photos[i]=true;const lab=document.getElementById('u'+(i+1));const img=lab?.querySelector('img');if(img){img.src=src;lab.classList.add('filled')}}});
+    if(!Array.isArray(state.photos))state.photos=[false,false,false];
+    state.photos=state.photos.map((v,i)=>!!v||!!state.photoData?.[i]);
+    if(document.getElementById('phoneOtpInputs')&&x.phoneOtp){[...document.querySelectorAll('#phoneOtpInputs input')].forEach((el,i)=>el.value=x.phoneOtp[i]||'')}
+    if(document.getElementById('idOtpInputs')&&x.idOtp){[...document.querySelectorAll('#idOtpInputs input')].forEach((el,i)=>el.value=x.idOtp[i]||'')}
+    if(state.faceLocked||state.photos.every(Boolean))updateSubmit();
     
     buildDeck(false);
     document.querySelectorAll('#interestFilter button').forEach(b=>b.classList.toggle('sel',b.dataset.gender===state.gender));
     if(document.getElementById('interestSelect'))document.getElementById('interestSelect').value=state.eventNiche||state.primaryInterest||'garba'; if(state.interest&&state.interest!=='all'){const labels={garba:'Navratri / Garba',turf:'Turf & Sports',cricket:'Cricket',meetup:'Meetups',music:'Music',gaming:'Gaming',food:'Food',travel:'Travel',movies:'Movies'};const label=labels[state.interest]||state.interest;document.getElementById('interestContext').textContent='Showing people interested in '+label;document.getElementById('discoverTitle').textContent='People for '+label;document.getElementById('discoverNiche').textContent=label;}
     if(state.verified){document.getElementById('myname').textContent=state.name;document.getElementById('homeName').textContent=state.name;document.getElementById('homeInitial').textContent=(state.name?.[0]||'Y').toUpperCase();document.getElementById('homeMobile').textContent='+91 ••••••'+(state.mobile||'0000').slice(-4);document.getElementById('homeAge').textContent=state.age||'18+';if(document.getElementById('profileAge'))document.getElementById('profileAge').textContent=state.age||'18+';if(document.getElementById('homeGreeting'))document.getElementById('homeGreeting').textContent='Find your people, '+(state.name||'tonight')+'.'}
     if(state.verified&&!state.interests?.length)state.currentScreen='interests';
-    const hashScreen=(location.hash||'').slice(1);
-    const restoreScreen=hashScreen&&document.getElementById(hashScreen)?hashScreen:(state.currentScreen||'welcome');
-    state.currentScreen=restoreScreen;
-    go(restoreScreen,true);
+    // The saved onboarding screen is authoritative. Safari/GitHub Pages can retain
+    // an old hash from the first page, so never let "#welcome" reset a saved step.
+    const savedScreen=state.currentScreen&&document.getElementById(state.currentScreen)?state.currentScreen:'welcome';
+    state.currentScreen=savedScreen;
+    go(savedScreen,true);
     if(state.currentScreen==='chat'&&state.currentChatName){setTimeout(()=>openChat(state.currentChatName),0)}
   }catch(e){console.warn('Could not restore VYBEUP session',e)}
 }
@@ -297,6 +340,7 @@ const publicScreens=new Set(['welcome','signup','phoneOtp','identity','identityO
 function go(id,silent=false){
   if(!state.verified&&!publicScreens.has(id)){if(!silent)note('Complete verification and profile creation first 🔒');id='welcome'}
   state.currentScreen=id;
+  saveCheckpoint();
   try{if(location.hash!=='#'+id)history.replaceState(null,'','#'+id)}catch(e){}
   document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===id));
   document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.go===id));
@@ -422,7 +466,19 @@ document.getElementById('startFaceScan').onclick=async()=>{
 function photoChange(label,index){const input=label.querySelector('input');input.addEventListener('change',()=>{
  const file=input.files&&input.files[0];if(!file)return;if(!file.type.startsWith('image/')){note('Please select an image');return}
  const img=label.querySelector('img')||document.createElement('img');if(!img.parentNode){img.alt='Profile photo';label.appendChild(img)}
- const reader=new FileReader();reader.onload=()=>{img.src=reader.result;label.classList.add('filled');state.photos[index]=true;state.photoData[index]=reader.result;updateSubmit();saveState()};reader.readAsDataURL(file);
+ const reader=new FileReader();reader.onload=()=>{
+  const source=new Image();
+  source.onload=()=>{
+    // Keep refresh-safe profile previews small enough for localStorage while
+    // preserving a clear face thumbnail for this demo.
+    const max=480,scale=Math.min(1,max/Math.max(source.width,source.height));
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));
+    const ctx=canvas.getContext('2d');ctx.drawImage(source,0,0,canvas.width,canvas.height);
+    const compressed=canvas.toDataURL('image/jpeg',0.72);
+    img.src=compressed;label.classList.add('filled');state.photos[index]=true;state.photoData[index]=compressed;updateSubmit();saveState();
+  };
+  source.src=reader.result;
+};reader.readAsDataURL(file);
 })}
 [['u1',0],['u2',1],['u3',2]].forEach(([id,i])=>photoChange(document.getElementById(id),i));
 document.getElementById('photoConsent').onchange=()=>{updateSubmit();saveState()};
@@ -436,13 +492,15 @@ function completeProfile(e){
     return;
   }
   if(!state.faceLocked){note('Complete Face Lock first');return}
-  state.verified=true;state.currentScreen='interests';saveState();
+  state.verified=true;
   document.getElementById('myname').textContent=state.name;
   document.getElementById('initial').textContent=(state.name[0]||'Y').toUpperCase();
   document.getElementById('homeName').textContent=state.name;
   document.getElementById('homeInitial').textContent=(state.name[0]||'Y').toUpperCase();
   document.getElementById('homeMobile').textContent='+91 ••••••'+state.mobile.slice(-4);
   document.getElementById('homeAge').textContent=state.age;
+  state.currentScreen='interests';
+  saveCheckpoint();
   go('interests');
   note('Profile created ✓ Choose your VYBES');
 }
