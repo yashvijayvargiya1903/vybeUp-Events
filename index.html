@@ -538,25 +538,43 @@ function updateSubmit(){
 }
 document.getElementById('videoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const v=document.getElementById('profileVideo');v.src=URL.createObjectURL(f);v.style.display='block';document.getElementById('videoPlaceholder').style.display='none';note('Profile video added')};
 function completeProfile(e){
-  if(e)e.preventDefault();
-  const ready=updateSubmit();
-  if(!state.faceLocked){note('Complete Face Lock first');return}
-  if(!state.photos.every(Boolean)){note('Select all 3 face photos');return}
-  if(!document.getElementById('photoConsent').checked){note('Please confirm the photo consent');return}
-  if(!ready){note('Finish the 3 photo verification step');return}
+  if(e){e.preventDefault();e.stopPropagation();}
+  const consent=document.getElementById('photoConsent');
+  const photos=Array.isArray(state.photos)?state.photos:[false,false,false];
+  if(!state.faceLocked){note('Complete Face Lock first');return false}
+  if(photos.length!==3||!photos.every(Boolean)){note('Select all 3 face photos');return false}
+  if(!consent?.checked){note('Please confirm the photo consent');return false}
+
+  // Stage 5 is the final onboarding verification step.
+  // Once it is complete, unlock the real app and land directly on Home.
   state.verified=true;
-  document.getElementById('myname').textContent=state.name;
-  document.getElementById('initial').textContent=(state.name[0]||'Y').toUpperCase();
-  document.getElementById('homeName').textContent=state.name;
-  document.getElementById('homeInitial').textContent=(state.name[0]||'Y').toUpperCase();
-  document.getElementById('homeMobile').textContent='+91 ••••••'+state.mobile.slice(-4);
-  document.getElementById('homeAge').textContent=state.age;
-  state.currentScreen='interests';
+  state.primaryInterest=state.primaryInterest||state.interests?.[0]||'garba';
+  state.interest=state.interest||state.primaryInterest;
+  state.eventNiche=state.eventNiche||state.primaryInterest;
+
+  const initial=(state.name?.[0]||'Y').toUpperCase();
+  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value};
+  set('myname',state.name||'Yash');
+  set('initial',initial);
+  set('homeName',state.name||'Yash');
+  set('homeInitial',initial);
+  set('homeMobile',state.mobile?'+91 ••••••'+state.mobile.slice(-4):'+91 ••••••');
+  set('homeAge',state.age||'—');
+  set('homeGreeting',(state.name||'Welcome')+', you are in.');
+  if(typeof updateHomeVibe==='function')updateHomeVibe();
+
+  state.currentScreen='home';
   saveCheckpoint();
-  go('interests');
-  note('Profile created ✓ Choose your VYBES');
+  saveState();
+  go('home');
+  note('Profile created ✓ Welcome to VYBEUP');
+  return false;
 }
-document.getElementById('submitProfile').addEventListener('click',completeProfile);
+const submitProfile=document.getElementById('submitProfile');
+if(submitProfile){
+  submitProfile.type='button';
+  submitProfile.onclick=completeProfile;
+}
 
 const interestLabels={garba:'Navratri / Garba',cricket:'Cricket',turf:'Turf & Sports',music:'Music',gaming:'Gaming',food:'Food',meetup:'Meetups',travel:'Travel',networking:'Networking',movies:'Movies',sports:'Sports'};
 function renderInterestChoices(){
