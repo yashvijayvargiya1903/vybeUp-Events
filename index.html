@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090909">
-<title>VYBEUP — Secure Identity Demo</title>
+<title>VYBEUP — Social Discovery Demo</title>
 <style>
 *{box-sizing:border-box}html{background:#070707}body{margin:0;background:#070707;color:#fff8ed;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 button,input,select{font:inherit}button{cursor:pointer}main{width:100%;max-width:520px;min-height:100svh;margin:0 auto;padding:18px 18px 92px;background:radial-gradient(circle at 50% 0,#421d16 0,#190d0b 34%,#080707 76%);overflow-x:hidden;width:100%;max-width:100%;}
@@ -91,7 +91,7 @@ button,input,select{font:inherit}button{cursor:pointer}main{width:100%;max-width
       <div class="faceGuide"></div><div class="scanLine" id="scanLine"></div>
       <div id="cameraPlaceholder" style="text-align:center;padding:25px;color:#b8a79d"><div style="font-size:48px">◉</div><b>Camera permission required</b><div class="tiny" style="margin-top:6px">Tap Start Face Lock Scan</div></div>
     </div>
-    <div class="scanStatus"><b id="scanInstruction">Ready for face lock</b><div class="tiny" id="scanSub">Front → left → right → up → down</div></div>
+    <div class="scanStatus"><b id="scanInstruction">Ready for face lock</b><div class="tiny" id="scanSub">Camera movement detection will guide each step</div><div class="tiny" id="faceReadout" style="margin-top:5px;color:#d8a65d">Waiting for camera…</div></div>
     <div class="scanSteps" id="scanSteps"><i class="scanStep"></i><i class="scanStep"></i><i class="scanStep"></i><i class="scanStep"></i><i class="scanStep"></i></div>
     <button class="btn" id="startFaceScan">Start Face Lock Scan →</button>
     <p class="scanNote">Demo only: no biometric template is created or compared here. Production must use consented liveness + face-match services and secure server-side verification.</p>
@@ -195,21 +195,81 @@ document.getElementById('sendAadhaarOtp').onclick=()=>{const a=document.getEleme
 document.getElementById('digiContinue').onclick=()=>{go('identityOtp');note('Demo DigiLocker flow started')};
 document.getElementById('verifyIdentity').onclick=()=>{if(otpValue('idOtpInputs')!=='000000'){note('For this demo use OTP 000000');return}go('faceScan');note('Identity route completed ✓')};
 
-let cameraStream=null,scanTimer=null;
+let cameraStream=null,faceLandmarker=null,faceFrame=null,faceScanRunning=false,faceCalibration=null,poseHoldStarted=0;
+async function loadFaceLandmarker(){
+  if(faceLandmarker)return;
+  const {FaceLandmarker,FilesetResolver}=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm');
+  const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
+  faceLandmarker=await FaceLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numFaces:1,minFaceDetectionConfidence:.6,minFacePresenceConfidence:.6,minTrackingConfidence:.6});
+}
+function facePose(landmarks){
+  const nose=landmarks[1],le=landmarks[33],re=landmarks[263],fore=landmarks[10],chin=landmarks[152];
+  const eyeMid={x:(le.x+re.x)/2,y:(le.y+re.y)/2},eyeDist=Math.max(.001,Math.hypot(le.x-re.x,le.y-re.y)),faceH=Math.max(.001,Math.abs(chin.y-fore.y));
+  return {yaw:(nose.x-eyeMid.x)/eyeDist,pitch:(nose.y-eyeMid.y)/faceH};
+}
+function finishFaceScan(){
+  faceScanRunning=false;cancelAnimationFrame(faceFrame);
+  if(cameraStream)cameraStream.getTracks().forEach(t=>t.stop());
+  const steps=[...document.querySelectorAll('.scanStep')];steps.forEach(s=>s.className='scanStep done');
+  state.faceLocked=true;
+  document.getElementById('scanInstruction').textContent='Face Lock scan captured ✓';
+  document.getElementById('scanSub').textContent='All 5 live head-movement checks completed';
+  document.getElementById('faceReadout').textContent='Face movement detected • demo liveness sequence complete';
+  document.getElementById('scanLine').style.display='none';
+  const btn=document.getElementById('startFaceScan');btn.disabled=false;btn.textContent='Continue to profile photos →';
+  btn.onclick=()=>go('profilePhotos');
+}
+async function runFaceScan(){
+  const labels=['Look straight','Turn slowly LEFT','Turn slowly RIGHT','Look slightly UP','Look slightly DOWN'];
+  const steps=[...document.querySelectorAll('.scanStep')],instruction=document.getElementById('scanInstruction'),sub=document.getElementById('scanSub'),readout=document.getElementById('faceReadout');
+  let step=0;poseHoldStarted=0;faceCalibration=null;faceScanRunning=true;
+  const tick=()=>{
+    if(!faceScanRunning)return;
+    const video=document.getElementById('faceCamera');
+    if(video.readyState>=2&&faceLandmarker){
+      const result=faceLandmarker.detectForVideo(video,performance.now()),lm=result.faceLandmarks&&result.faceLandmarks[0];
+      if(lm){
+        const pose=facePose(lm);
+        if(step===0){
+          const front=Math.abs(pose.yaw)<.13;
+          readout.textContent=front?'Face centered ✓':'Center your face inside the guide';
+          if(front){if(!poseHoldStarted)poseHoldStarted=performance.now();if(performance.now()-poseHoldStarted>650){faceCalibration=pose;steps[0].className='scanStep done';step=1;poseHoldStarted=0;instruction.textContent=labels[1];sub.textContent='Turn your head LEFT and hold';steps[1].className='scanStep active';}}
+          else poseHoldStarted=0;
+        }else{
+          const dy=pose.yaw-faceCalibration.yaw,dp=pose.pitch-faceCalibration.pitch;
+          let ok=false,dir='';
+          if(step===1){ok=dy<-.16;dir='LEFT';}
+          if(step===2){ok=dy>.16;dir='RIGHT';}
+          if(step===3){ok=dp<-.055;dir='UP';}
+          if(step===4){ok=dp>.055;dir='DOWN';}
+          readout.textContent=ok?'Movement detected ✓':'Waiting for '+dir+' movement…';
+          if(ok){if(!poseHoldStarted)poseHoldStarted=performance.now();if(performance.now()-poseHoldStarted>550){steps[step].className='scanStep done';step++;poseHoldStarted=0;if(step<labels.length){instruction.textContent=labels[step];sub.textContent=step===2?'Turn your head RIGHT and hold':step===3?'Look slightly UP and hold':'Look slightly DOWN and hold';steps[step].className='scanStep active';}else{finishFaceScan();return;}}}else poseHoldStarted=0;
+        }
+      }else{readout.textContent='No face detected • move into the guide';poseHoldStarted=0;}
+    }
+    faceFrame=requestAnimationFrame(tick);
+  };
+  instruction.textContent=labels[0];sub.textContent='Center your face and hold steady';steps.forEach(s=>s.className='scanStep');steps[0].className='scanStep active';tick();
+}
 document.getElementById('startFaceScan').onclick=async()=>{
   const btn=document.getElementById('startFaceScan'),video=document.getElementById('faceCamera'),ph=document.getElementById('cameraPlaceholder');
-  btn.disabled=true;document.getElementById('scanInstruction').textContent='Requesting camera…';
-  try{cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:720},height:{ideal:960}},audio:false});video.srcObject=cameraStream;video.style.display='block';ph.style.display='none';document.getElementById('scanLine').style.display='block';runDemoScan()}
-  catch(e){btn.disabled=false;note('Camera permission is needed for this demo');document.getElementById('scanInstruction').textContent='Camera permission not granted'}
+  btn.disabled=true;document.getElementById('scanInstruction').textContent='Loading live face detection…';document.getElementById('faceReadout').textContent='Loading face model…';
+  try{
+    await loadFaceLandmarker();
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:720},height:{ideal:960}},audio:false});
+    video.srcObject=cameraStream;video.style.display='block';ph.style.display='none';document.getElementById('scanLine').style.display='block';
+    await video.play();runFaceScan();
+  }catch(e){
+    btn.disabled=false;document.getElementById('scanInstruction').textContent='Face detection could not start';document.getElementById('faceReadout').textContent='Allow camera access and ensure the demo can load its face model';note('Camera/model access is required for Face Lock');
+  }
 };
-function runDemoScan(){const labels=['Look straight','Turn slowly LEFT','Turn slowly RIGHT','Look slightly UP','Look slightly DOWN'];let i=0;const steps=[...document.querySelectorAll('.scanStep')];const line=document.getElementById('scanLine');scanTimer=setInterval(()=>{if(i>0)steps[i-1].className='scanStep done';steps[i].className='scanStep active';document.getElementById('scanInstruction').textContent=labels[i];document.getElementById('scanSub').textContent='Hold steady for the guided capture';i++;if(i===labels.length){clearInterval(scanTimer);steps.forEach(s=>s.className='scanStep done');state.faceLocked=true;document.getElementById('scanInstruction').textContent='Face Lock scan captured ✓';document.getElementById('scanSub').textContent='Demo liveness sequence complete';line.style.display='none';document.getElementById('startFaceScan').disabled=false;document.getElementById('startFaceScan').textContent='Continue to profile photos →';document.getElementById('startFaceScan').onclick=()=>{if(cameraStream)cameraStream.getTracks().forEach(t=>t.stop());go('profilePhotos')}}},950)}
 
 function photoChange(label,index){const input=label.querySelector('input');input.addEventListener('change',()=>{const file=input.files&&input.files[0];if(!file)return;if(!file.type.startsWith('image/')){note('Please select an image');return}const img=label.querySelector('img')||document.createElement('img');if(!img.parentNode){img.alt='Profile photo';label.appendChild(img)}img.src=URL.createObjectURL(file);label.classList.add('filled');state.photos[index]=true;updateSubmit()})}
 [['u1',0],['u2',1],['u3',2]].forEach(([id,i])=>photoChange(document.getElementById(id),i));
 document.getElementById('photoConsent').onchange=updateSubmit;
 function updateSubmit(){document.getElementById('submitProfile').disabled=!(state.faceLocked&&state.photos.every(Boolean)&&document.getElementById('photoConsent').checked)}
 document.getElementById('videoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const v=document.getElementById('profileVideo');v.src=URL.createObjectURL(f);v.style.display='block';document.getElementById('videoPlaceholder').style.display='none';note('Profile video added')};
-document.getElementById('submitProfile').onclick=()=>{if(!state.faceLocked){note('Complete Face Lock first');return}state.verified=true;document.getElementById('myname').textContent=state.name;document.getElementById('initial').textContent=(state.name[0]||'Y').toUpperCase();document.getElementById('homeName').textContent=state.name;document.getElementById('homeInitial').textContent=(state.name[0]||'Y').toUpperCase();document.getElementById('homeMobile').textContent='+91 ••••••'+state.mobile.slice(-4);document.getElementById('homeAge').textContent=state.age;go('verification');note('Profile created ✓')};
+document.getElementById('submitProfile').onclick=()=>{if(!state.faceLocked){note('Complete Face Lock first');return}state.verified=true;document.getElementById('myname').textContent=state.name;document.getElementById('initial').textContent=(state.name[0]||'Y').toUpperCase();document.getElementById('homeName').textContent=state.name;document.getElementById('homeInitial').textContent=(state.name[0]||'Y').toUpperCase();document.getElementById('homeMobile').textContent='+91 ••••••'+state.mobile.slice(-4);document.getElementById('homeAge').textContent=state.age;go('home');note('Profile created ✓ Welcome to VYBEUP ✦')};
 
 const people=[
 {name:'Riya',age:24,gender:'girls',area:'Vesu',distance:'2.1 km',vibe:'High Energy',tags:['💃 Garba','🎵 Music'],img:'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=900&q=85',mutual:true},
