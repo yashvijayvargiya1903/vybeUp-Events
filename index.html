@@ -1,13 +1,154 @@
-<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>VYBEUP — Surat Navratri</title><style>
-*{box-sizing:border-box}body{margin:0;background:#070707;color:#fff8ed;font-family:Inter,system-ui,sans-serif}main{max-width:520px;margin:auto;min-height:100vh;background:radial-gradient(circle at 50% 0,#401b13,#160c0b 40%,#080707 78%);padding:18px}.top{display:flex;justify-content:space-between;align-items:center}.logo{font-size:26px;font-weight:900;letter-spacing:-1.5px}.logo span,.gold{color:#e6a83a}.screen{display:none;min-height:calc(100vh - 36px)}.screen.on{display:block}.hero{padding:90px 4px 35px}.eyebrow{font-size:11px;letter-spacing:3px;color:#d9a85e}.hero h1{font-size:76px;line-height:.85;letter-spacing:-6px;margin:14px 0}.hero p,.muted{color:#bcaea5;line-height:1.7}.btn{width:100%;padding:16px;border:0;border-radius:16px;background:linear-gradient(135deg,#f0bc52,#b86832);font-weight:800;color:#190d08;font-size:15px;cursor:pointer}.ghost,.back{background:none;color:#b8aaa1;border:0;cursor:pointer}.card,.profile,.event,.chat{background:#120d0c;border:1px solid #342522;border-radius:20px;padding:18px}.field{margin:14px 0}.field label{display:block;font-size:10px;color:#a99b93;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px}.field input,.field select{width:100%;padding:14px;background:#1b1311;color:#fff;border:1px solid #3c2b26;border-radius:13px;font-size:16px}.chips,.tags{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.chip,.tag{border:1px solid #46332c;background:#17100f;color:#d8c9bd;border-radius:999px;padding:9px 12px;font-size:12px}.chip.sel{background:#e6a83a;color:#190d08}.photo{height:360px;border-radius:16px;background:radial-gradient(circle at 50% 35%,#b56e4f,#5a2d24 36%,#160d0c 72%);display:grid;place-items:center}.avatar{width:145px;height:145px;border-radius:50%;display:grid;place-items:center;font-size:58px;background:linear-gradient(145deg,#f0c19c,#894735);border:4px solid #e6a83a}.pname{font-size:27px;font-weight:850;margin-top:15px}.actions{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:9px;margin-top:10px}.actions button{height:54px;border-radius:16px;border:1px solid #3a2924;background:#150e0d;color:#fff;font-size:20px}.actions .like{background:#e6a83a;color:#190d08}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.event{cursor:pointer}.event small{color:#e6a83a}.event h3{font-family:Georgia,serif;font-size:21px;margin:7px 0}.event p{font-size:12px;color:#a99b92}.match{text-align:center;padding-top:110px}.ring{width:190px;height:190px;border-radius:50%;border:1px solid #e6a83a66;display:grid;place-items:center;margin:25px auto}.mini{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;background:#6d3527;border:3px solid #e6a83a;font-size:25px}.twos{display:flex;align-items:center;gap:8px}.chat{display:flex;gap:12px;align-items:center;margin:9px 0}.chat .mini{width:50px;height:50px}.nav{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:#0d0a09;border-top:1px solid #2b1e1b;margin:20px -18px -18px;padding:9px}.nav button{background:none;border:0;color:#83766f;padding:8px;font-size:11px}.nav button span{display:block;font-size:18px;margin-bottom:3px}.nav button.active{color:#e6a83a}.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#f3ddbb;color:#1b0e09;padding:11px 16px;border-radius:999px;font-size:12px;font-weight:800;display:none}.toast.show{display:block}@media(max-width:420px){.hero h1{font-size:62px}.photo{height:315px}.grid{grid-template-columns:1fr 1fr}}
-</style></head><body><main id="app">
-<section class="screen on" id="home"><div class="top"><div class="logo">VYBE<span>UP</span></div><button class="back" data-go="profile">Profile</button></div><div class="hero"><div class="eyebrow">SURAT · NAVRATRI 2026</div><h1>Find your<br><span class="gold">VYBE.</span></h1><p>Discover people, places and things happening around you. Starting with Surat's biggest season — then taking the experience everywhere.</p><div class="chips"><span class="chip">🪩 Navratri</span><span class="chip">⚽ Sports</span><span class="chip">🎮 Gaming</span><span class="chip">🎤 Events</span></div><button class="btn" data-go="onboard">Get into the VYBE →</button></div></section>
-<section class="screen" id="onboard"><button class="back" data-go="home">← Back</button><h2>Let's build your VYBE</h2><p class="muted">Tell us the basics and we'll personalize your experience.</p><div class="card"><div class="field"><label>Name</label><input id="name" value="Yash"></div><div class="field"><label>Age</label><input type="number" value="24"></div><div class="field"><label>Surat area</label><select><option>Vesu</option><option>Adajan</option><option>Piplod</option><option>City Light</option><option>Pal</option><option>Varachha</option></select></div><div class="field"><label>Your vibe</label><div class="chips" id="vibes"><button class="chip sel">🔥 High Energy</button><button class="chip">✨ Traditional</button><button class="chip">🪩 Dandiya</button><button class="chip">🌙 Chill</button></div></div><button class="btn" id="enter">Enter VYBEUP →</button></div></section>
-<section class="screen" id="discover"><div class="top"><div><div class="eyebrow">DISCOVER</div><h2>People you might vibe with</h2></div><button class="back" data-go="events">Tonight</button></div><div class="profile"><div class="photo"><div class="avatar">✦</div></div><div class="pname">Riya, 24</div><div class="muted">📍 Vesu, Surat · 2.1 km</div><div class="tags"><span class="tag">🔥 High Energy</span><span class="tag">💃 Garba All Night</span><span class="tag">📍 Vesu Tonight</span></div></div><div class="actions"><button id="pass">×</button><button class="like" id="like">♥ VYBE</button><button id="super">★</button></div></section>
-<section class="screen" id="match"><div class="match"><div class="eyebrow">VYBE MATCH ✦</div><div class="ring"><div class="twos"><div class="mini">Y</div><b class="gold">+</b><div class="mini">✦</div></div></div><h2>You two VYBE.</h2><p class="muted">You and Riya both picked Vesu + High Energy tonight.</p><button class="btn" data-go="chat">Say what's up →</button><button class="btn" style="margin-top:9px;background:#15100f;color:white;border:1px solid #3a2925" data-go="discover">Keep discovering</button></div></section>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090909">
+<title>VYBEUP — Secure Identity Demo</title>
+<style>
+*{box-sizing:border-box}html{background:#070707}body{margin:0;background:#070707;color:#fff8ed;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit}button{cursor:pointer}main{width:100%;max-width:520px;min-height:100svh;margin:0 auto;padding:18px 18px 92px;background:radial-gradient(circle at 50% 0,#421d16 0,#190d0b 34%,#080707 76%);overflow-x:hidden}
+.screen{display:none;min-height:calc(100svh - 36px)}.screen.on{display:block}.top{display:flex;justify-content:space-between;align-items:center;gap:12px}.logo{font-size:26px;font-weight:950;letter-spacing:-1.7px}.logo span,.gold{color:#e8ac42}.eyebrow{font-size:10px;letter-spacing:2.5px;color:#d8a65d;font-weight:800}.back{background:none;border:0;color:#b9aaa0;padding:8px 0}.hero{padding:70px 2px 24px}.hero h1{font-size:clamp(58px,16vw,78px);line-height:.86;letter-spacing:-5px;margin:14px 0 20px}.hero p,.muted{color:#b9aaa2;line-height:1.65}.btn{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:16px;background:linear-gradient(135deg,#f2c25e,#b86732);font-weight:900;color:#1b0d08;box-shadow:0 10px 30px #0006}.btn.secondary{background:#15100f;color:#fff;border:1px solid #3b2924;box-shadow:none}.btn:disabled{opacity:.45;cursor:not-allowed}.card,.profile,.event,.chat,.verifybox{background:rgba(18,13,12,.94);border:1px solid #382723;border-radius:20px;padding:18px;box-shadow:0 16px 45px #0004}.field{margin:15px 0}.field label{display:block;font-size:10px;color:#a99b93;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-weight:800}.field input,.field select{width:100%;min-height:50px;padding:13px 14px;background:#1a1210;color:#fff;border:1px solid #3c2b26;border-radius:13px;outline:none}.field input:focus,.field select:focus{border-color:#e6a83a}.chips,.tags{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.chip,.tag{border:1px solid #46332c;background:#17100f;color:#d8c9bd;border-radius:999px;padding:9px 12px;font-size:12px}.chip.sel{background:#e6a83a;color:#190d08}.steps{display:flex;gap:6px;margin:20px 0}.step{height:4px;flex:1;border-radius:10px;background:#30211d}.step.done{background:#e6a83a}.step.active{background:#c98235}.secure{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid #3d3027;background:#15100e;border-radius:14px;margin:14px 0}.secure b{font-size:13px}.secure p{font-size:11px;margin:3px 0 0;color:#a99b93;line-height:1.5}.otp{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:14px 0}.otp input{text-align:center;font-size:20px;font-weight:900;padding:10px 0;min-height:50px}.method{display:grid;grid-template-columns:1fr 1fr;gap:9px}.method button{min-height:72px;background:#15100f;color:#fff;border:1px solid #3b2924;border-radius:16px;text-align:left;padding:13px}.method button.sel{border-color:#e6a83a;background:#24170f}.method b{display:block;font-size:13px}.method small{display:block;color:#a99b93;margin-top:4px}.uploadgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.upload{position:relative;aspect-ratio:1/1;border:1px dashed #685047;border-radius:15px;background:#140e0d;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden}.upload input{position:absolute;inset:0;opacity:0;cursor:pointer}.upload .placeholder{font-size:11px;color:#b7a69c;padding:8px}.upload img{width:100%;height:100%;object-fit:cover;display:none}.upload.filled img{display:block}.upload.filled .placeholder{display:none}.upload .num{position:absolute;left:7px;top:7px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#e6a83a;color:#190d08;font-size:11px;font-weight:900;z-index:2}.videoBox{border:1px solid #3a2925;border-radius:16px;padding:14px;background:#130d0c;margin-top:10px}.videoPreview{height:155px;border-radius:12px;background:linear-gradient(145deg,#211511,#0d0a09);display:grid;place-items:center;color:#9e8f86;text-align:center;overflow:hidden}.videoPreview video{width:100%;height:100%;object-fit:cover;display:none}.check{display:flex;gap:10px;align-items:flex-start;font-size:11px;color:#b9aaa2;line-height:1.5;margin:14px 0}.check input{margin-top:2px;accent-color:#e6a83a}.verified{display:none;text-align:center;padding:30px 10px}.verified .tick{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;margin:0 auto 18px;background:#2c2114;border:1px solid #e6a83a;color:#e6a83a;font-size:38px}.photo{height:360px;border-radius:16px;background:radial-gradient(circle at 50% 35%,#b56e4f,#5a2d24 36%,#160d0c 72%);display:grid;place-items:center}.avatar{width:145px;height:145px;border-radius:50%;display:grid;place-items:center;font-size:58px;background:linear-gradient(145deg,#f0c19c,#894735);border:4px solid #e6a83a}.pname{font-size:27px;font-weight:850;margin-top:15px}.actions{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:9px;margin-top:10px}.actions button{height:54px;border-radius:16px;border:1px solid #3a2924;background:#150e0d;color:#fff;font-size:20px}.actions .like{background:#e6a83a;color:#190d08}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.event{cursor:pointer}.event small{color:#e6a83a}.event h3{font-family:Georgia,serif;font-size:21px;margin:7px 0}.event p{font-size:12px;color:#a99b92}.match{text-align:center;padding-top:110px}.ring{width:190px;height:190px;border-radius:50%;border:1px solid #e6a83a66;display:grid;place-items:center;margin:25px auto}.mini{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;background:#6d3527;border:3px solid #e6a83a;font-size:25px}.twos{display:flex;align-items:center;gap:8px}.chat{display:flex;gap:12px;align-items:center;margin:9px 0}.chat .mini{width:50px;height:50px}.nav{position:fixed;z-index:10;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:#0d0a09ee;backdrop-filter:blur(18px);border-top:1px solid #2b1e1b;padding:8px 10px env(safe-area-inset-bottom)}.nav button{background:none;border:0;color:#83766f;padding:8px;font-size:11px}.nav button span{display:block;font-size:18px;margin-bottom:3px}.nav button.active{color:#e6a83a}.toast{position:fixed;z-index:30;bottom:82px;left:50%;transform:translateX(-50%);background:#f3ddbb;color:#1b0e09;padding:11px 16px;border-radius:999px;font-size:12px;font-weight:900;display:none;white-space:nowrap}.toast.show{display:block}.tiny{font-size:10px;color:#8e8078;line-height:1.5}.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#21170f;color:#e9bd70;font-size:10px;font-weight:800}.notice{font-size:11px;line-height:1.55;color:#a99b93;padding:10px 12px;background:#120e0d;border-left:2px solid #e6a83a;border-radius:8px;margin:12px 0}
+@media(max-width:390px){main{padding-left:14px;padding-right:14px}.uploadgrid{gap:6px}.upload .placeholder{font-size:10px}.method button{padding:10px}.hero{padding-top:55px}}
+</style>
+</head>
+<body>
+<main>
+<section class="screen on" id="welcome">
+  <div class="top"><div class="logo">VYBE<span>UP</span></div><span class="badge">🔒 Safety first</span></div>
+  <div class="hero">
+    <div class="eyebrow">SURAT · VYBEUP</div>
+    <h1>Real people.<br><span class="gold">Real VYBES.</span></h1>
+    <p>Before you discover people and events, create your profile and complete identity verification. This prototype shows the complete onboarding experience.</p>
+    <div class="secure"><div>🛡️</div><div><b>Identity-first onboarding</b><p>Mobile OTP → identity verification → face-photo profile → discovery.</p></div></div>
+    <button class="btn" data-go="signup">Create my profile →</button>
+  </div>
+</section>
+
+<section class="screen" id="signup">
+  <button class="back" data-go="welcome">← Back</button>
+  <div class="eyebrow" style="margin-top:12px">01 · CREATE ACCOUNT</div><h2>Your basics</h2>
+  <div class="steps"><i class="step active"></i><i class="step"></i><i class="step"></i><i class="step"></i></div>
+  <div class="card">
+    <div class="field"><label>Full name</label><input id="fullName" autocomplete="name" placeholder="Enter your full name"></div>
+    <div class="field"><label>Age</label><input id="age" type="number" min="18" max="99" placeholder="18+"></div>
+    <div class="field"><label>Mobile number</label><input id="mobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div>
+    <div class="notice">You must be 18+ to continue with this prototype.</div>
+    <button class="btn" id="sendPhone">Send mobile OTP →</button>
+  </div>
+</section>
+
+<section class="screen" id="phoneOtp">
+  <button class="back" data-go="signup">← Back</button>
+  <div class="eyebrow" style="margin-top:12px">02 · MOBILE VERIFY</div><h2>Verify your number</h2>
+  <p class="muted">Enter the 6-digit OTP sent to <b id="maskedMobile">your mobile</b>.</p>
+  <div class="steps"><i class="step done"></i><i class="step active"></i><i class="step"></i><i class="step"></i></div>
+  <div class="card">
+    <div class="otp" id="phoneOtpInputs"></div>
+    <button class="btn" id="verifyPhone">Verify mobile →</button>
+    <button class="back" id="resendPhone" style="display:block;margin:15px auto 0">Resend OTP</button>
+    <p class="tiny" style="text-align:center">Demo OTP is shown in the interface so this GitHub prototype never sends a real SMS.</p>
+  </div>
+</section>
+
+<section class="screen" id="identity">
+  <button class="back" data-go="phoneOtp">← Back</button>
+  <div class="eyebrow" style="margin-top:12px">03 · IDENTITY</div><h2>Verify who you are</h2>
+  <p class="muted">Choose a supported identity route. In production, this screen connects to an authorized Aadhaar/DigiLocker integration.</p>
+  <div class="steps"><i class="step done"></i><i class="step done"></i><i class="step active"></i><i class="step"></i></div>
+  <div class="method">
+    <button class="sel" data-method="aadhaar"><b>🪪 Aadhaar</b><small>OTP + consent</small></button>
+    <button data-method="digilocker"><b>🔐 DigiLocker</b><small>Verified document</small></button>
+  </div>
+  <div class="card" id="aadhaarBox" style="margin-top:12px">
+    <div class="field"><label>Aadhaar / VID</label><input id="aadhaar" inputmode="numeric" maxlength="16" placeholder="XXXX XXXX XXXX"></div>
+    <div class="check"><input type="checkbox" id="aadhaarConsent"><span>I consent to identity verification through an authorized Aadhaar service. The production system will show the official consent notice before any authentication.</span></div>
+    <button class="btn" id="sendAadhaarOtp">Continue with Aadhaar →</button>
+  </div>
+  <div class="card" id="digiBox" style="margin-top:12px;display:none">
+    <div class="secure"><div>🔐</div><div><b>Continue in DigiLocker</b><p>You will be redirected to the official consent/authentication flow in production.</p></div></div>
+    <button class="btn" id="digiContinue">Continue with DigiLocker →</button>
+  </div>
+  <p class="tiny">No real Aadhaar number is transmitted by this static demo. Real verification requires an approved backend integration.</p>
+</section>
+
+<section class="screen" id="identityOtp">
+  <button class="back" data-go="identity">← Back</button>
+  <div class="eyebrow" style="margin-top:12px">03 · IDENTITY OTP</div><h2>Confirm identity</h2>
+  <p class="muted">Enter the verification OTP sent through the authorized identity provider.</p>
+  <div class="card"><div class="otp" id="idOtpInputs"></div><button class="btn" id="verifyIdentity">Verify identity →</button><p class="tiny" style="text-align:center;margin-top:12px">Demo only — no real UIDAI/DigiLocker authentication occurs here.</p></div>
+</section>
+
+<section class="screen" id="profilePhotos">
+  <button class="back" data-go="identity">← Back</button>
+  <div class="eyebrow" style="margin-top:12px">04 · PROFILE SAFETY</div><h2>Add 3 clear face photos</h2>
+  <p class="muted">All three are compulsory. Photos should clearly show your face without sunglasses, masks or heavy obstruction.</p>
+  <div class="steps"><i class="step done"></i><i class="step done"></i><i class="step done"></i><i class="step active"></i></div>
+  <div class="uploadgrid">
+    <label class="upload" id="u1"><span class="num">1</span><span class="placeholder">Front face<br>Photo</span><input type="file" accept="image/*" capture="user"></label>
+    <label class="upload" id="u2"><span class="num">2</span><span class="placeholder">Second angle<br>Photo</span><input type="file" accept="image/*" capture="user"></label>
+    <label class="upload" id="u3"><span class="num">3</span><span class="placeholder">Third clear<br>Photo</span><input type="file" accept="image/*" capture="user"></label>
+  </div>
+  <div class="videoBox">
+    <b>🎥 Optional profile video</b><p class="tiny">Your second profile media option. Add a short introduction or VYBE video.</p>
+    <div class="videoPreview" id="videoPreview"><span id="videoPlaceholder">No video selected<br><small>MP4 / MOV</small></span><video id="profileVideo" controls playsinline></video></div>
+    <label class="btn secondary" style="display:block;text-align:center;margin-top:10px">Add video <input id="videoInput" type="file" accept="video/*" capture="user" style="display:none"></label>
+  </div>
+  <div class="check"><input type="checkbox" id="photoConsent"><span>I confirm these are my own photos and that I am submitting clear, truthful information for profile verification.</span></div>
+  <button class="btn" id="submitProfile" disabled>Verify my profile →</button>
+  <p class="tiny">Production flow: liveness detection + face comparison against the legally obtained identity photograph + fraud/risk checks would run on a secure backend.</p>
+</section>
+
+<section class="screen" id="verification">
+  <div class="verified">
+    <div class="tick">✓</div><div class="eyebrow">PROFILE CHECK COMPLETE</div><h2 id="verifyTitle">Identity verified</h2>
+    <p class="muted" id="verifyText">Your demo profile passed the prototype verification flow.</p>
+    <div class="card" style="text-align:left;margin-top:22px"><b>Safety status</b><p class="muted">✓ Mobile verified<br>✓ Identity route completed<br>✓ 3 profile photos submitted<br>✓ Optional video supported</p><div class="notice">Production note: this screen must only display “verified” after a real authorized identity provider and server-side face/liveness checks return success.</div></div>
+    <button class="btn" data-go="discover">Enter VYBEUP →</button>
+  </div>
+</section>
+
+<section class="screen" id="discover">
+  <div class="top"><div><div class="eyebrow">DISCOVER</div><h2>People you might vibe with</h2></div><button class="back" data-go="events">Tonight</button></div>
+  <div class="profile"><div class="photo"><div class="avatar">✦</div></div><div class="pname">Riya, 24</div><div class="muted">📍 Vesu, Surat · 2.1 km</div><div class="tags"><span class="tag">🔥 High Energy</span><span class="tag">💃 Garba All Night</span><span class="tag">✓ Verified</span></div></div>
+  <div class="actions"><button id="pass">×</button><button class="like" id="like">♥ VYBE</button><button id="super">★</button></div>
+</section>
+
+<section class="screen" id="match"><div class="match"><div class="eyebrow">VYBE MATCH ✦</div><div class="ring"><div class="twos"><div class="mini">Y</div><b class="gold">+</b><div class="mini">✦</div></div></div><h2>You two VYBE.</h2><p class="muted">You and Riya both picked Vesu + High Energy tonight.</p><button class="btn" data-go="chat">Say what's up →</button><button class="btn secondary" style="margin-top:9px" data-go="discover">Keep discovering</button></div></section>
+
 <section class="screen" id="events"><button class="back" data-go="discover">← Discover</button><div style="margin-top:20px" class="eyebrow">WHAT'S HAPPENING</div><h2>Tonight in Surat</h2><p class="muted">Find something happening. Pick your vibe. Show up.</p><div class="grid"><div class="event" data-event="Vesu Garba"><small>TONIGHT · 9 PM</small><h3>Vesu</h3><p>Garba night · 486 people vibing</p></div><div class="event" data-event="Adajan Garba"><small>TONIGHT · 8:30 PM</small><h3>Adajan</h3><p>Traditional · 312 people vibing</p></div><div class="event" data-event="Piplod Turf"><small>TONIGHT · 10 PM</small><h3>Football Turf</h3><p>Piplod · 8 players needed</p></div><div class="event" data-event="City Light Cricket"><small>SATURDAY · 7 PM</small><h3>Cricket</h3><p>City Light · 6 players joined</p></div></div></section>
+
 <section class="screen" id="chat"><div class="top"><div><div class="eyebrow">CONNECTIONS</div><h2>Your VYBES</h2></div><button class="back" data-go="discover">＋ Discover</button></div><div class="chat"><div class="mini">✦</div><div><b>Riya</b><p class="muted">“Vesu tonight? 👀”</p></div></div><div class="chat"><div class="mini">A</div><div><b>Ananya</b><p class="muted">Both picked Traditional ✨</p></div></div><div class="chat"><div class="mini">K</div><div><b>Kunal</b><p class="muted">“Which Garba night?”</p></div></div><button class="btn" data-go="events">Explore tonight →</button></section>
-<section class="screen" id="profile"><button class="back" data-go="home">← Home</button><div class="eyebrow" style="margin-top:20px">YOUR VYBE</div><h2>Your profile</h2><div class="card"><div style="display:flex;gap:14px;align-items:center"><div class="mini" id="initial">Y</div><div><b id="myname">Yash</b><p class="muted">📍 Surat · High Energy</p></div></div><div class="chips"><span class="chip">🔥 High Energy</span><span class="chip">🪩 Navratri</span><span class="chip">⚽ Sports</span></div><button class="btn" data-go="discover">Start discovering →</button></div></section>
-<nav class="nav"><button data-go="home"><span>⌂</span>Home</button><button data-go="discover"><span>♡</span>Discover</button><button data-go="events"><span>✦</span>Tonight</button><button data-go="chat"><span>◌</span>VYBES</button></nav></main><div id="toast" class="toast"></div><script>
-const app=document.getElementById('app'),toast=document.getElementById('toast');function go(id){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.go===id));scrollTo(0,0)}function note(t){toast.textContent=t;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1500)}document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));document.querySelectorAll('#vibes .chip').forEach(b=>b.onclick=()=>{document.querySelectorAll('#vibes .chip').forEach(x=>x.classList.remove('sel'));b.classList.add('sel')});document.getElementById('enter').onclick=()=>{let n=document.getElementById('name').value.trim()||'Yash';document.getElementById('myname').textContent=n;document.getElementById('initial').textContent=n[0].toUpperCase();note('Welcome to VYBEUP ✦');setTimeout(()=>go('discover'),300)};document.getElementById('like').onclick=()=>{note('It’s a VYBE ♥');setTimeout(()=>go('match'),350)};document.getElementById('super').onclick=()=>{note('VYBE sent ★');setTimeout(()=>go('match'),350)};document.getElementById('pass').onclick=()=>note('Next VYBE →');document.querySelectorAll('.event').forEach(e=>e.onclick=()=>{note(e.dataset.event+' added ✦');go('discover')});
-</script></body></html>
+
+<section class="screen" id="profile"><button class="back" data-go="welcome">← Home</button><div class="eyebrow" style="margin-top:20px">YOUR VYBE</div><h2>Your profile</h2><div class="card"><div style="display:flex;gap:14px;align-items:center"><div class="mini" id="initial">Y</div><div><b id="myname">Your name</b><p class="muted">📍 Surat · ✓ Verified</p></div></div><div class="chips"><span class="chip">🔥 High Energy</span><span class="chip">🪩 Navratri</span><span class="chip">⚽ Sports</span></div><button class="btn" data-go="discover">Start discovering →</button></div></section>
+
+<nav class="nav"><button data-go="welcome"><span>⌂</span>Home</button><button data-go="discover"><span>♡</span>Discover</button><button data-go="events"><span>✦</span>Tonight</button><button data-go="chat"><span>◌</span>VYBES</button></nav>
+</main>
+<div id="toast" class="toast"></div>
+<script>
+const toast=document.getElementById('toast'),state={name:'',mobile:'',identityMethod:'aadhaar',photos:[false,false,false]};
+function go(id){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.go===id));window.scrollTo({top:0,behavior:'instant'})}
+function note(t){toast.textContent=t;toast.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>toast.classList.remove('show'),1800)}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+function makeOtp(containerId){const c=document.getElementById(containerId);c.innerHTML='';for(let i=0;i<6;i++){const x=document.createElement('input');x.maxLength=1;x.inputMode='numeric';x.autocomplete='one-time-code';x.addEventListener('input',()=>{if(x.value&&x.nextElementSibling)x.nextElementSibling.focus()});x.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!x.value&&x.previousElementSibling)x.previousElementSibling.focus()});c.appendChild(x)}}
+makeOtp('phoneOtpInputs');makeOtp('idOtpInputs');
+function otpValue(id){return [...document.querySelectorAll('#'+id+' input')].map(x=>x.value).join('')}
+function validateBasics(){const n=document.getElementById('fullName').value.trim(),a=Number(document.getElementById('age').value),m=document.getElementById('mobile').value.replace(/\D/g,'');if(!n||a<18||m.length!==10){note('Enter name, age 18+ and a valid 10-digit mobile');return false}state.name=n;state.mobile=m;return true}
+document.getElementById('sendPhone').onclick=()=>{if(!validateBasics())return;document.getElementById('maskedMobile').textContent='+91 ••••••'+state.mobile.slice(-4);go('phoneOtp');note('Demo OTP: 123456')};
+document.getElementById('verifyPhone').onclick=()=>{if(otpValue('phoneOtpInputs')!=='123456'){note('For this demo use OTP 123456');return}go('identity');note('Mobile verified ✓')};
+document.getElementById('resendPhone').onclick=()=>note('Demo OTP: 123456');
+document.querySelectorAll('[data-method]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-method]').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');state.identityMethod=b.dataset.method;document.getElementById('aadhaarBox').style.display=state.identityMethod==='aadhaar'?'block':'none';document.getElementById('digiBox').style.display=state.identityMethod==='digilocker'?'block':'none'});
+document.getElementById('sendAadhaarOtp').onclick=()=>{const a=document.getElementById('aadhaar').value.replace(/\D/g,'');if(a.length!==12&&a.length!==16){note('Enter a demo Aadhaar/VID value');return}if(!document.getElementById('aadhaarConsent').checked){note('Consent is required');return}go('identityOtp');note('Demo identity OTP: 654321')};
+document.getElementById('digiContinue').onclick=()=>{go('identityOtp');note('Demo DigiLocker flow started')};
+document.getElementById('verifyIdentity').onclick=()=>{if(otpValue('idOtpInputs')!=='654321'){note('For this demo use OTP 654321');return}go('profilePhotos');note('Identity route completed ✓')};
+function photoChange(label,index){const input=label.querySelector('input');input.addEventListener('change',()=>{const file=input.files&&input.files[0];if(!file)return;if(!file.type.startsWith('image/')){note('Please select an image');return}const img=label.querySelector('img')||document.createElement('img');if(!img.parentNode){img.alt='Profile photo';label.appendChild(img)}img.src=URL.createObjectURL(file);label.classList.add('filled');state.photos[index]=true;updateSubmit()})}
+[['u1',0],['u2',1],['u3',2]].forEach(([id,i])=>photoChange(document.getElementById(id),i));
+document.getElementById('photoConsent').onchange=updateSubmit;
+function updateSubmit(){document.getElementById('submitProfile').disabled=!(state.photos.every(Boolean)&&document.getElementById('photoConsent').checked)}
+document.getElementById('videoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const v=document.getElementById('profileVideo');v.src=URL.createObjectURL(f);v.style.display='block';document.getElementById('videoPlaceholder').style.display='none';note('Profile video added')};
+document.getElementById('submitProfile').onclick=()=>{document.getElementById('myname').textContent=state.name;document.getElementById('initial').textContent=(state.name[0]||'Y').toUpperCase();go('verification');note('Prototype checks complete')};
+document.getElementById('like').onclick=()=>{note('It’s a VYBE ♥');setTimeout(()=>go('match'),300)};document.getElementById('super').onclick=()=>{note('VYBE sent ★');setTimeout(()=>go('match'),300)};document.getElementById('pass').onclick=()=>note('Next VYBE →');
+document.querySelectorAll('.event').forEach(e=>e.onclick=()=>{note(e.dataset.event+' added ✦');go('discover')});
+</script>
+</body>
+</html>
