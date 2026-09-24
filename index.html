@@ -215,7 +215,7 @@ main{overflow:hidden}
     <label class="btn secondary" style="display:block;text-align:center;margin-top:10px">🎥 Choose video from Gallery <input id="videoInput" type="file" accept="video/*" style="display:none"></label>
   </div>
   <div class="check"><input type="checkbox" id="photoConsent"><span>I confirm these are my own photos and that I am submitting clear, truthful information for profile verification.</span></div>
-  <button class="btn" id="submitProfile" disabled>Complete profile →</button>
+  <button type="button" class="btn" id="submitProfile" disabled>Complete profile →</button>
   <p class="tiny">Production flow: server-side liveness + identity-photo comparison + fraud/risk checks would run before a real verified badge is granted.</p>
 </section>
 
@@ -494,34 +494,56 @@ document.getElementById('startFaceScan').onclick=async()=>{
 };
 
 function photoChange(label,index){const input=label.querySelector('input');input.addEventListener('change',()=>{
- const file=input.files&&input.files[0];if(!file)return;if(!file.type.startsWith('image/')){note('Please select an image');return}
- const img=label.querySelector('img')||document.createElement('img');if(!img.parentNode){img.alt='Profile photo';label.appendChild(img)}
- const reader=new FileReader();reader.onload=()=>{
+ const file=input.files&&input.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')){note('Please select an image');return}
+ // Mark the slot complete immediately. The image compression happens
+ // asynchronously, so the Continue button must not depend on FileReader timing.
+ state.photos[index]=true;
+ state.photoData[index]=state.photoData[index]||'';
+ label.classList.add('filled');
+ updateSubmit();
+ saveCheckpoint();
+
+ const img=label.querySelector('img')||document.createElement('img');
+ if(!img.parentNode){img.alt='Profile photo';label.appendChild(img)}
+ const reader=new FileReader();
+ reader.onload=()=>{
   const source=new Image();
   source.onload=()=>{
-    // Keep refresh-safe profile previews small enough for localStorage while
-    // preserving a clear face thumbnail for this demo.
     const max=480,scale=Math.min(1,max/Math.max(source.width,source.height));
-    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(source.width*scale));
+    canvas.height=Math.max(1,Math.round(source.height*scale));
     const ctx=canvas.getContext('2d');ctx.drawImage(source,0,0,canvas.width,canvas.height);
     const compressed=canvas.toDataURL('image/jpeg',0.72);
-    img.src=compressed;label.classList.add('filled');state.photos[index]=true;state.photoData[index]=compressed;updateSubmit();saveState();
+    img.src=compressed;
+    state.photoData[index]=compressed;
+    state.photos[index]=true;
+    updateSubmit();
+    saveState();
   };
+  source.onerror=()=>{note('Photo selected ✓');updateSubmit();saveCheckpoint()};
   source.src=reader.result;
-};reader.readAsDataURL(file);
+ };
+ reader.onerror=()=>{note('Photo selected ✓');updateSubmit();saveCheckpoint()};
+ reader.readAsDataURL(file);
 })}
 [['u1',0],['u2',1],['u3',2]].forEach(([id,i])=>photoChange(document.getElementById(id),i));
-document.getElementById('photoConsent').onchange=()=>{updateSubmit();saveState()};
-function updateSubmit(){document.getElementById('submitProfile').disabled=!(state.faceLocked&&state.photos.every(Boolean)&&document.getElementById('photoConsent').checked)}
+document.getElementById('photoConsent').onchange=()=>{updateSubmit();saveCheckpoint()};
+function updateSubmit(){
+  const ok=!!state.faceLocked&&Array.isArray(state.photos)&&state.photos.length===3&&state.photos.every(Boolean)&&!!document.getElementById('photoConsent')?.checked;
+  const btn=document.getElementById('submitProfile');
+  if(btn){btn.disabled=!ok;btn.textContent=ok?'Complete profile →':'Add 3 photos + confirm consent'};
+  return ok;
+}
 document.getElementById('videoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const v=document.getElementById('profileVideo');v.src=URL.createObjectURL(f);v.style.display='block';document.getElementById('videoPlaceholder').style.display='none';note('Profile video added')};
 function completeProfile(e){
   if(e)e.preventDefault();
-  updateSubmit();
-  if(document.getElementById('submitProfile').disabled){
-    note('Select all 3 photos and confirm the photo consent');
-    return;
-  }
+  const ready=updateSubmit();
   if(!state.faceLocked){note('Complete Face Lock first');return}
+  if(!state.photos.every(Boolean)){note('Select all 3 face photos');return}
+  if(!document.getElementById('photoConsent').checked){note('Please confirm the photo consent');return}
+  if(!ready){note('Finish the 3 photo verification step');return}
   state.verified=true;
   document.getElementById('myname').textContent=state.name;
   document.getElementById('initial').textContent=(state.name[0]||'Y').toUpperCase();
