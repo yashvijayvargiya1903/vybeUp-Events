@@ -255,7 +255,7 @@ main{overflow:hidden}
 <div id="toast" class="toast"></div>
 <script>
 const toast=document.getElementById('toast'),state={name:'',mobile:'',age:'',identityMethod:'aadhaar',photos:[false,false,false],photoData:['','',''],faceLocked:false,verified:false,gender:'both',interest:'all',deck:[],deckIndex:0,likedByMe:new Set(),matches:[],currentScreen:'welcome',currentChatName:'',interests:['garba','cricket','music'],primaryInterest:'garba',plans:[],safetyCheckIn:false,eventNiche:'garba'};
-const STORAGE_KEY='vybeup_demo_v4';
+const STORAGE_KEY='vybeup_demo_v4',SCREEN_KEY='vybeup_screen_v1';
 function saveCheckpoint(){
   try{
     const checkpoint={
@@ -276,7 +276,7 @@ function saveCheckpoint(){
       currentScreen:state.currentScreen||'welcome',
       eventNiche:state.eventNiche||state.primaryInterest||'garba'
     };
-    localStorage.setItem('vybeup_checkpoint_v1',JSON.stringify(checkpoint));
+    localStorage.setItem('vybeup_checkpoint_v1',JSON.stringify(checkpoint)); try{localStorage.setItem(SCREEN_KEY,checkpoint.currentScreen)}catch(e){}
   }catch(e){}
 }
 function saveState(){
@@ -329,8 +329,18 @@ function restoreState(){
     if(state.verified&&!state.interests?.length)state.currentScreen='interests';
     // The saved onboarding screen is authoritative. Safari/GitHub Pages can retain
     // an old hash from the first page, so never let "#welcome" reset a saved step.
-    const savedScreen=state.currentScreen&&document.getElementById(state.currentScreen)?state.currentScreen:'welcome';
+    let savedScreen='';
+    try{savedScreen=localStorage.getItem(SCREEN_KEY)||''}catch(e){}
+    if(!savedScreen) savedScreen=state.currentScreen||'';
+    if(!savedScreen||!document.getElementById(savedScreen)||savedScreen==='welcome'){
+      if(state.verified) savedScreen='interests';
+      else if(state.faceLocked||state.photos?.some(Boolean)) savedScreen='profilePhotos';
+      else if(state.mobile) savedScreen='phoneOtp';
+      else if(state.name) savedScreen='signup';
+      else savedScreen='welcome';
+    }
     state.currentScreen=savedScreen;
+    try{localStorage.setItem(SCREEN_KEY,savedScreen)}catch(e){}
     go(savedScreen,true);
     if(state.currentScreen==='chat'&&state.currentChatName){setTimeout(()=>openChat(state.currentChatName),0)}
   }catch(e){console.warn('Could not restore VYBEUP session',e)}
@@ -340,6 +350,7 @@ const publicScreens=new Set(['welcome','signup','phoneOtp','identity','identityO
 function go(id,silent=false){
   if(!state.verified&&!publicScreens.has(id)){if(!silent)note('Complete verification and profile creation first 🔒');id='welcome'}
   state.currentScreen=id;
+  try{localStorage.setItem(SCREEN_KEY,id)}catch(e){}
   saveCheckpoint();
   try{if(location.hash!=='#'+id)history.replaceState(null,'','#'+id)}catch(e){}
   document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===id));
