@@ -70,6 +70,29 @@ button,input,select{font:inherit}button{cursor:pointer}main{width:100%;max-width
   #profilePhotos .upload{aspect-ratio:1.18/1}
   #profilePhotos .videoPreview{height:48px}
 }
+
+/* Final mobile polish: use the full viewport cleanly with no dead space. */
+@media(max-width:430px){
+  .screen:not(.appScreen){display:flex;flex-direction:column;overflow:hidden}
+  #faceScan .scanBox{
+    flex:1;min-height:0;margin-bottom:0;
+    display:flex;flex-direction:column;justify-content:space-between;
+  }
+  #faceScan .camera{
+    height:auto;min-height:190px;flex:1;
+  }
+  #faceScan .scanStatus{margin:8px 0 0}
+  #faceScan .scanSteps{margin:8px 0}
+  #faceScan #startFaceScan{margin-top:6px}
+  #faceScan .scanNote{margin-top:6px}
+  #profilePhotos .uploadgrid{margin-bottom:6px}
+  #profilePhotos .videoBox{margin-top:6px}
+  #profilePhotos .videoPreview{height:68px}
+  #profilePhotos .check{margin:7px 0}
+  #profilePhotos #submitProfile{margin-top:2px}
+  #profilePhotos>p.tiny{margin-top:5px;margin-bottom:0}
+}
+
 </style>
 </head>
 <body>
@@ -311,12 +334,14 @@ function finishFaceScan(){
   if(cameraStream)cameraStream.getTracks().forEach(t=>t.stop());
   const steps=[...document.querySelectorAll('.scanStep')];steps.forEach(s=>s.className='scanStep done');
   state.faceLocked=true;saveState();
-  document.getElementById('scanInstruction').textContent='Face Lock scan captured ✓';
+  document.getElementById('scanInstruction').textContent='Face Lock verified ✓';
   document.getElementById('scanSub').textContent='All 5 live head-movement checks completed';
-  document.getElementById('faceReadout').textContent='Face movement detected • demo liveness sequence complete';
+  document.getElementById('faceReadout').textContent='Face movement detected • moving to profile photos…';
   document.getElementById('scanLine').style.display='none';
-  const btn=document.getElementById('startFaceScan');btn.disabled=false;btn.textContent='Continue to profile photos →';
-  btn.onclick=()=>go('profilePhotos');
+  const btn=document.getElementById('startFaceScan');
+  btn.disabled=true;
+  btn.textContent='Verified ✓';
+  setTimeout(()=>go('profilePhotos'),420);
 }
 async function runFaceScan(){
   const labels=['Look straight','Turn slowly LEFT','Turn slowly RIGHT','Look slightly UP','Look slightly DOWN'];
@@ -386,7 +411,25 @@ function photoChange(label,index){const input=label.querySelector('input');input
 document.getElementById('photoConsent').onchange=()=>{updateSubmit();saveState()};
 function updateSubmit(){document.getElementById('submitProfile').disabled=!(state.faceLocked&&state.photos.every(Boolean)&&document.getElementById('photoConsent').checked)}
 document.getElementById('videoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const v=document.getElementById('profileVideo');v.src=URL.createObjectURL(f);v.style.display='block';document.getElementById('videoPlaceholder').style.display='none';note('Profile video added')};
-document.getElementById('submitProfile').onclick=()=>{if(!state.faceLocked){note('Complete Face Lock first');return}state.verified=true;state.currentScreen='interests';saveState();document.getElementById('myname').textContent=state.name;document.getElementById('initial').textContent=(state.name[0]||'Y').toUpperCase();document.getElementById('homeName').textContent=state.name;document.getElementById('homeInitial').textContent=(state.name[0]||'Y').toUpperCase();document.getElementById('homeMobile').textContent='+91 ••••••'+state.mobile.slice(-4);document.getElementById('homeAge').textContent=state.age;go('interests');note('Profile created ✓ Choose your VYBES')};
+function completeProfile(e){
+  if(e)e.preventDefault();
+  updateSubmit();
+  if(document.getElementById('submitProfile').disabled){
+    note('Select all 3 photos and confirm the photo consent');
+    return;
+  }
+  if(!state.faceLocked){note('Complete Face Lock first');return}
+  state.verified=true;state.currentScreen='interests';saveState();
+  document.getElementById('myname').textContent=state.name;
+  document.getElementById('initial').textContent=(state.name[0]||'Y').toUpperCase();
+  document.getElementById('homeName').textContent=state.name;
+  document.getElementById('homeInitial').textContent=(state.name[0]||'Y').toUpperCase();
+  document.getElementById('homeMobile').textContent='+91 ••••••'+state.mobile.slice(-4);
+  document.getElementById('homeAge').textContent=state.age;
+  go('interests');
+  note('Profile created ✓ Choose your VYBES');
+}
+document.getElementById('submitProfile').addEventListener('click',completeProfile);
 
 const interestLabels={garba:'Navratri / Garba',cricket:'Cricket',turf:'Turf & Sports',music:'Music',gaming:'Gaming',food:'Food',meetup:'Meetups',travel:'Travel',networking:'Networking',movies:'Movies',sports:'Sports'};
 function renderInterestChoices(){
