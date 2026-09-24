@@ -654,9 +654,9 @@ function renderCard(){
   const nextImg=document.getElementById('swipeImage');
   nextImg.src=p.img;
   nextImg.onerror=()=>{
-    nextImg.removeAttribute('src');
-    nextImg.style.background='linear-gradient(145deg,#3b211b,#140d0b)';
-    nextImg.alt='Profile photo unavailable';
+    const initials=encodeURIComponent((p.name||'VYBE').slice(0,2).toUpperCase());
+    nextImg.src='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100" viewBox="0 0 900 1100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e6a83a"/><stop offset="1" stop-color="#4a2119"/></linearGradient></defs><rect width="900" height="1100" fill="url(#g)"/><circle cx="450" cy="390" r="155" fill="#f0c19c"/><path d="M180 1040c25-245 155-365 270-365s245 120 270 365" fill="#1b1110"/><text x="450" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-size="62" font-weight="800" fill="#fff8ed">'+decodeURIComponent(initials)+'</text></svg>');
+    nextImg.alt='VYBEUP profile';
   };
   document.getElementById('swipeName').textContent=p.name+', '+p.age;
   document.getElementById('swipeMeta').textContent='📍 '+p.area+' · '+p.distance+' · '+p.vibe+' · ✓ Identity checked';
@@ -761,13 +761,19 @@ window.addEventListener('beforeunload',()=>{
   const route=state.currentScreen||((location.hash||'').slice(1))||'welcome';
   safeStore(localStorage,SCREEN_KEY,route);
   safeStore(sessionStorage,SESSION_SCREEN_KEY,route);
-  try{if(location.hash!=='#'+route)history.replaceState(null,'','#'+route)}catch(e){}
+  safeStore(localStorage,ROUTE_KEY,route);
+  safeStore(sessionStorage,ROUTE_KEY,route);
+  try{history.replaceState({vybeScreen:route},'','#'+route)}catch(e){}
   saveState();
 });
 window.addEventListener('pagehide',()=>{
   const route=state.currentScreen||((location.hash||'').slice(1))||'welcome';
   safeStore(localStorage,SCREEN_KEY,route);
   safeStore(sessionStorage,SESSION_SCREEN_KEY,route);
+  safeStore(localStorage,ROUTE_KEY,route);
+  safeStore(sessionStorage,ROUTE_KEY,route);
+  try{history.replaceState({vybeScreen:route},'','#'+route)}catch(e){}
+  saveCheckpoint();
 });
 restoreState();
 
