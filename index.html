@@ -255,7 +255,14 @@ main{overflow:hidden}
 <div id="toast" class="toast"></div>
 <script>
 const toast=document.getElementById('toast'),state={name:'',mobile:'',age:'',identityMethod:'aadhaar',photos:[false,false,false],photoData:['','',''],faceLocked:false,verified:false,gender:'both',interest:'all',deck:[],deckIndex:0,likedByMe:new Set(),matches:[],currentScreen:'welcome',currentChatName:'',interests:['garba','cricket','music'],primaryInterest:'garba',plans:[],safetyCheckIn:false,eventNiche:'garba'};
-const STORAGE_KEY='vybeup_demo_v4',SCREEN_KEY='vybeup_screen_v1';
+const STORAGE_KEY='vybeup_demo_v4',SCREEN_KEY='vybeup_screen_v1',CHECKPOINT_KEY='vybeup_checkpoint_v1';
+const SESSION_SCREEN_KEY='vybeup_screen_session_v1',SESSION_CHECKPOINT_KEY='vybeup_checkpoint_session_v1';
+function safeStore(storage,key,value){
+  try{storage.setItem(key,value);return true}catch(e){return false}
+}
+function safeRead(storage,key){
+  try{return storage.getItem(key)||''}catch(e){return ''}
+}
 function saveCheckpoint(){
   try{
     const checkpoint={
@@ -276,7 +283,14 @@ function saveCheckpoint(){
       currentScreen:state.currentScreen||'welcome',
       eventNiche:state.eventNiche||state.primaryInterest||'garba'
     };
-    localStorage.setItem('vybeup_checkpoint_v1',JSON.stringify(checkpoint)); try{localStorage.setItem(SCREEN_KEY,checkpoint.currentScreen)}catch(e){}
+    const payload=JSON.stringify(checkpoint);
+    // Use both persistent localStorage and sessionStorage. iOS/Safari can reject
+    // localStorage in some privacy/quota situations; sessionStorage still lets a
+    // normal refresh resume the exact onboarding step.
+    safeStore(localStorage,CHECKPOINT_KEY,payload);
+    safeStore(localStorage,SCREEN_KEY,checkpoint.currentScreen);
+    safeStore(sessionStorage,SESSION_CHECKPOINT_KEY,payload);
+    safeStore(sessionStorage,SESSION_SCREEN_KEY,checkpoint.currentScreen);
   }catch(e){}
 }
 function saveState(){
@@ -301,9 +315,12 @@ function saveState(){
 function otpValueSafe(id){const el=document.getElementById(id);return el?[...el.querySelectorAll('input')].map(x=>x.value).join(''):''}
 function restoreState(){
   try{
-    const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
-    const checkpoint=JSON.parse(localStorage.getItem('vybeup_checkpoint_v1')||'null');
-    if(!stored&&!checkpoint)return;
+    const stored=JSON.parse(safeRead(localStorage,STORAGE_KEY)||safeRead(sessionStorage,STORAGE_KEY)||'null');
+    const checkpoint=JSON.parse(safeRead(localStorage,CHECKPOINT_KEY)||safeRead(sessionStorage,SESSION_CHECKPOINT_KEY)||'null');
+    // If persistent storage is unavailable, the session checkpoint is enough to
+    // resume the onboarding flow after a refresh in the same browser tab.
+    const hashScreen=(location.hash||'').slice(1);
+    if(!stored&&!checkpoint&&!hashScreen)return;
     const x={...(stored||{}),...(checkpoint||{})};
     if(stored?.chatMessages&&typeof stored.chatMessages==='object')Object.assign(chatMessages,stored.chatMessages);
     Object.assign(state,x); if(!Array.isArray(state.interests)||!state.interests.length)state.interests=['garba','cricket','music']; if(!Array.isArray(state.plans))state.plans=[]; if(!state.primaryInterest)state.primaryInterest=state.interests[0]||'garba'; state.eventNiche=state.eventNiche||state.primaryInterest||'garba';
@@ -329,9 +346,9 @@ function restoreState(){
     if(state.verified&&!state.interests?.length)state.currentScreen='interests';
     // The saved onboarding screen is authoritative. Safari/GitHub Pages can retain
     // an old hash from the first page, so never let "#welcome" reset a saved step.
-    let savedScreen='';
-    try{savedScreen=localStorage.getItem(SCREEN_KEY)||''}catch(e){}
-    if(!savedScreen) savedScreen=state.currentScreen||'';
+    let savedScreen=safeRead(localStorage,SCREEN_KEY)||safeRead(sessionStorage,SESSION_SCREEN_KEY)||hashScreen||state.currentScreen||'';
+    // A hash is a second independent fallback because it survives a hard refresh
+    // even when browser storage has been blocked or cleared.
     if(!savedScreen||!document.getElementById(savedScreen)||savedScreen==='welcome'){
       if(state.verified) savedScreen='interests';
       else if(state.faceLocked||state.photos?.some(Boolean)) savedScreen='profilePhotos';
@@ -340,7 +357,8 @@ function restoreState(){
       else savedScreen='welcome';
     }
     state.currentScreen=savedScreen;
-    try{localStorage.setItem(SCREEN_KEY,savedScreen)}catch(e){}
+    safeStore(localStorage,SCREEN_KEY,savedScreen);
+    safeStore(sessionStorage,SESSION_SCREEN_KEY,savedScreen);
     go(savedScreen,true);
     if(state.currentScreen==='chat'&&state.currentChatName){setTimeout(()=>openChat(state.currentChatName),0)}
   }catch(e){console.warn('Could not restore VYBEUP session',e)}
@@ -350,7 +368,8 @@ const publicScreens=new Set(['welcome','signup','phoneOtp','identity','identityO
 function go(id,silent=false){
   if(!state.verified&&!publicScreens.has(id)){if(!silent)note('Complete verification and profile creation first 🔒');id='welcome'}
   state.currentScreen=id;
-  try{localStorage.setItem(SCREEN_KEY,id)}catch(e){}
+  safeStore(localStorage,SCREEN_KEY,id);
+  safeStore(sessionStorage,SESSION_SCREEN_KEY,id);
   saveCheckpoint();
   try{if(location.hash!=='#'+id)history.replaceState(null,'','#'+id)}catch(e){}
   document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===id));
@@ -640,7 +659,7 @@ document.getElementById('switchCall').onclick=async()=>{
 
 function renderMatches(){const box=document.getElementById('matchList');if(!state.matches.length){box.innerHTML='<div class="emptyChat"><div style="font-size:40px">♡</div><h3>No mutual matches yet</h3><p class="muted">Chat, voice call and video call unlock only when both people have expressed interest.</p><button class="btn" data-go="discover">Discover people →</button></div>';box.querySelector('[data-go]').onclick=()=>go('discover');return}box.innerHTML=state.matches.slice(0,3).map(p=>{const msgs=chatMessages[p.name]||[];const last=msgs.length?msgs[msgs.length-1].text:'You matched — say hello ✨';return '<div class="chatListItem"><img class="chatAvatar" src="'+p.img+'" alt=""><div class="chatPreview"><b>'+esc(p.name)+', '+p.age+' <span class="verifiedDot">✓</span></b><p>'+esc(last)+'</p></div><button class="btn chatOpenBtn" data-chat="'+esc(p.name)+'">Chat</button></div>'}).join('');box.querySelectorAll('[data-chat]').forEach(b=>b.onclick=()=>openChat(b.dataset.chat))}
 
-document.getElementById('editProfileBtn').onclick=()=>{document.getElementById('fullName').value=state.name||'';document.getElementById('age').value=state.age||'';document.getElementById('mobile').value=state.mobile||'';go('signup')};document.getElementById('profileInterestsBtn').onclick=()=>{renderInterestChoices();go('interests')};document.getElementById('profileDiscoverBtn').onclick=()=>chooseNiche(state.primaryInterest||'garba');document.getElementById('resetDemoBtn').onclick=()=>{localStorage.removeItem(STORAGE_KEY);location.reload()};document.getElementById('createPlan').onclick=()=>document.getElementById('planModal').classList.add('on');document.getElementById('closePlan').onclick=()=>document.getElementById('planModal').classList.remove('on');document.getElementById('savePlan').onclick=()=>{const interest=document.getElementById('planActivity').value;const icons={garba:'🪩',cricket:'🏏',turf:'⚽',music:'🎵',meetup:'🤝',food:'🍜'};const names={garba:'Garba plan',cricket:'Cricket plan',turf:'Turf plan',music:'Music plan',meetup:'Meetup plan',food:'Food plan'};state.plans.unshift({name:names[interest],icon:icons[interest],interest,time:document.getElementById('planTime').value,size:document.getElementById('planSize').value,status:'Open'});saveState();renderPlans();document.getElementById('planModal').classList.remove('on');note('VYBE plan created ✦')};renderMatches();buildDeck(false);renderInterestChoices();updateHomeVibe();renderPlans();
+document.getElementById('editProfileBtn').onclick=()=>{document.getElementById('fullName').value=state.name||'';document.getElementById('age').value=state.age||'';document.getElementById('mobile').value=state.mobile||'';go('signup')};document.getElementById('profileInterestsBtn').onclick=()=>{renderInterestChoices();go('interests')};document.getElementById('profileDiscoverBtn').onclick=()=>chooseNiche(state.primaryInterest||'garba');document.getElementById('resetDemoBtn').onclick=()=>{try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(CHECKPOINT_KEY);localStorage.removeItem(SCREEN_KEY);sessionStorage.removeItem(STORAGE_KEY);sessionStorage.removeItem(SESSION_CHECKPOINT_KEY);sessionStorage.removeItem(SESSION_SCREEN_KEY)}catch(e){}location.hash='';location.reload()};document.getElementById('createPlan').onclick=()=>document.getElementById('planModal').classList.add('on');document.getElementById('closePlan').onclick=()=>document.getElementById('planModal').classList.remove('on');document.getElementById('savePlan').onclick=()=>{const interest=document.getElementById('planActivity').value;const icons={garba:'🪩',cricket:'🏏',turf:'⚽',music:'🎵',meetup:'🤝',food:'🍜'};const names={garba:'Garba plan',cricket:'Cricket plan',turf:'Turf plan',music:'Music plan',meetup:'Meetup plan',food:'Food plan'};state.plans.unshift({name:names[interest],icon:icons[interest],interest,time:document.getElementById('planTime').value,size:document.getElementById('planSize').value,status:'Open'});saveState();renderPlans();document.getElementById('planModal').classList.remove('on');note('VYBE plan created ✦')};renderMatches();buildDeck(false);renderInterestChoices();updateHomeVibe();renderPlans();
 function renderPlans(){
  const box=document.getElementById('plansList');if(!box)return;
  if(!state.plans.length){box.innerHTML='<div class="notice">No VYBE plans yet. Create one above and invite your matches.</div>';return}
