@@ -180,14 +180,14 @@ button,input,select{font:inherit}button{cursor:pointer}main{width:100%;max-width
 </main>
 <div id="toast" class="toast"></div>
 <script>
-const toast=document.getElementById('toast'),state={name:'',mobile:'',age:'',identityMethod:'aadhaar',photos:[false,false,false],photoData:['','',''],faceLocked:false,verified:false,gender:'both',interest:'all',deck:[],deckIndex:0,likedByMe:new Set(),matches:[],currentScreen:'welcome'};
+const toast=document.getElementById('toast'),state={name:'',mobile:'',age:'',identityMethod:'aadhaar',photos:[false,false,false],photoData:['','',''],faceLocked:false,verified:false,gender:'both',interest:'all',deck:[],deckIndex:0,likedByMe:new Set(),matches:[],currentScreen:'welcome',currentChatName:''};
 const STORAGE_KEY='vybeup_demo_v4';
 function saveState(){
   try{
     const clean={...state,deck:[],deckIndex:state.deckIndex,likedByMe:[...state.likedByMe],matches:state.matches.map(p=>p.name),currentScreen:state.currentScreen};
     clean.aadhaar=document.getElementById('aadhaar')?.value||'';
     clean.aadhaarConsent=!!document.getElementById('aadhaarConsent')?.checked;
-    clean.phoneOtp=otpValueSafe('phoneOtpInputs'); clean.idOtp=otpValueSafe('idOtpInputs');
+    clean.phoneOtp=otpValueSafe('phoneOtpInputs'); clean.idOtp=otpValueSafe('idOtpInputs'); clean.photoConsent=!!document.getElementById('photoConsent')?.checked; clean.currentChatName=currentChat?.name||state.currentChatName||'';
     localStorage.setItem(STORAGE_KEY,JSON.stringify(clean));
   }catch(e){}
 }
@@ -202,12 +202,19 @@ function restoreState(){
     if(document.getElementById('age'))document.getElementById('age').value=state.age||'';
     if(document.getElementById('mobile'))document.getElementById('mobile').value=state.mobile||'';
     if(document.getElementById('aadhaar'))document.getElementById('aadhaar').value=x.aadhaar||'';
-    if(document.getElementById('aadhaarConsent'))document.getElementById('aadhaarConsent').checked=!!x.aadhaarConsent;
-    if(state.photoData)state.photoData.forEach((src,i)=>{if(src){const lab=document.getElementById('u'+(i+1));const img=lab?.querySelector('img');if(img){img.src=src;lab.classList.add('filled')}}});
+    if(document.getElementById('aadhaarConsent'))document.getElementById('aadhaarConsent').checked=!!x.aadhaarConsent; if(document.getElementById('photoConsent'))document.getElementById('photoConsent').checked=!!x.photoConsent;
+    if(state.photoData)state.photoData.forEach((src,i)=>{if(src){const lab=document.getElementById('u'+(i+1));const img=lab?.querySelector('img');if(img){img.src=src;lab.classList.add('filled')}}}); if(state.faceLocked||state.photos.every(Boolean))updateSubmit();
     if(state.currentScreen==='faceScan'&&state.faceLocked)state.currentScreen='profilePhotos';
     buildDeck();
+    document.querySelectorAll('#interestFilter button').forEach(b=>b.classList.toggle('sel',b.dataset.gender===state.gender));
+    if(state.interest&&state.interest!=='all'){
+      const labels={garba:'Navratri Garba',turf:'Turf & sports',cricket:'Cricket',meetup:'Meetup & social'};
+      document.getElementById('interestContext').textContent='Showing people interested in '+(labels[state.interest]||state.interest);
+      document.getElementById('discoverTitle').textContent='People for '+(labels[state.interest]||state.interest);
+    }
     if(state.verified){document.getElementById('myname').textContent=state.name;document.getElementById('homeName').textContent=state.name;document.getElementById('homeInitial').textContent=(state.name?.[0]||'Y').toUpperCase();document.getElementById('homeMobile').textContent='+91 ••••••'+(state.mobile||'0000').slice(-4);document.getElementById('homeAge').textContent=state.age||'18+'}
     go(state.currentScreen||'welcome',true);
+    if(state.currentScreen==='chat'&&state.currentChatName){setTimeout(()=>openChat(state.currentChatName),0)}
   }catch(e){console.warn('Could not restore VYBEUP session',e)}
 }
 function note(t){toast.textContent=t;toast.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>toast.classList.remove('show'),1800)}
@@ -381,9 +388,9 @@ swipeCard.addEventListener('pointerup',e=>{if(!drag)return;drag=false;const dx=e
 
 const chatMessages={};let currentChat=null;
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function showChatList(){currentChat=null;document.getElementById('chatRoomView').style.display='none';document.getElementById('chatListView').style.display='block';renderMatches()}
+function showChatList(){currentChat=null;state.currentChatName='';document.getElementById('chatRoomView').style.display='none';document.getElementById('chatListView').style.display='block';renderMatches();saveState()}
 function openChat(name){
- const p=state.matches.find(x=>x.name===name);if(!p)return;currentChat=p;
+ const p=state.matches.find(x=>x.name===name);if(!p)return;currentChat=p;state.currentChatName=p.name;saveState();
  if(!chatMessages[p.name])chatMessages[p.name]=[{mine:false,text:'Hey! We matched ✨',time:'Now'},{mine:false,text:'What are you up to tonight?',time:'Now'}];
  document.getElementById('chatListView').style.display='none';const room=document.getElementById('chatRoomView');room.style.display='block';
  room.innerHTML='<div class="chatRoom"><div class="chatRoomHead"><button class="roomBack" id="roomBack">‹</button><img class="roomAvatar" src="'+p.img+'" alt=""><div class="roomName"><b>'+esc(p.name)+', '+p.age+'</b><small>✓ Identity checked · '+esc(p.area)+'</small></div><div class="callActions"><button class="callBtn" id="audioCall" title="Voice call" aria-label="Voice call">☎</button><button class="callBtn" id="videoCall" title="Video call" aria-label="Video call">▣</button></div></div><div class="chatMessages" id="chatMessages"></div><div class="typing" id="typing">VYBE is typing…</div><div class="chatComposer"><input class="chatInput" id="chatInput" maxlength="500" placeholder="Message '+esc(p.name)+'…"><button class="sendMsg" id="sendMsg">➤</button></div></div>';
